@@ -1,4 +1,0 @@
-C:\Sources\dotnet-samples\network-dotnet-create-simple-internet-facing-load-balancer\bin\Debug\net452\ManageInternetFacingLoadBalancer.runtimeconfig.json
-C:\Sources\dotnet-samples\network-dotnet-create-simple-internet-facing-load-balancer\bin\Debug\net452\ManageInternetFacingLoadBalancer.runtimeconfig.dev.json
-C:\Sources\dotnet-samples\network-dotnet-create-simple-internet-facing-load-balancer\obj\Debug\net452\ManageInternetFacingLoadBalancer.csproj.ManageInternetFacingLoadBalancer.exe.config
-C:\Sources\dotnet-samples\network-dotnet-create-simple-internet-facing-load-balancer\obj\Debug\net452\ManageInternetFacingLoadBalancer.csproj.CoreCompileInputs.cache
