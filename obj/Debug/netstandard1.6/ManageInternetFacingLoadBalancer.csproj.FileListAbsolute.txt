@@ -1,0 +1,2 @@
+C:\Sources\dotnet-samples\network-dotnet-create-simple-internet-facing-load-balancer\bin\Debug\netstandard1.6\ManageInternetFacingLoadBalancer.deps.json
+C:\Sources\dotnet-samples\network-dotnet-create-simple-internet-facing-load-balancer\obj\Debug\netstandard1.6\ManageInternetFacingLoadBalancer.csproj.CoreCompileInputs.cache

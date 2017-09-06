@@ -1,57 +1,59 @@
-# Project Name
+---
+services: Network
+platforms: .Net
+author: martinsawicki
+---
 
-(short, 1-3 sentenced, description of the project)
+# Getting Started with Network - Manage Internet Facing Load Balancer - in .Net #
 
-## Features
-
-This project framework provides the following features:
-
-* Feature 1
-* Feature 2
-* ...
-
-## Getting Started
-
-### Prerequisites
-
-(ideally very short, if any)
-
-- OS
-- Library version
-- ...
-
-### Installation
-
-(ideally very short)
-
-- npm install [package name]
-- mvn install
-- ...
-
-### Quickstart
-(Add steps to get up and running quickly)
-
-1. git clone [repository clone url]
-2. cd [respository name]
-3. ...
+          Azure Network sample for managing Internet facing load balancers -
+          High-level ...
+          - Create an Internet facing load balancer that receives network traffic on
+            port 80 & 443 and sends load-balanced traffic to two virtual machines
+          - Create NAT rules for SSH and TELNET access to virtual
+            machines behind the load balancer
+          - Create health probes
+          Details ...
+          Create an Internet facing load balancer with ...
+          - A frontend public IP address
+          - Two backend address pools which contain network interfaces for the virtual
+            machines to receive HTTP and HTTPS network traffic from the load balancer
+          - Two load balancing rules for HTTP and HTTPS to map public ports on the load
+            balancer to ports in the backend address pool
+          - Two probes which contain HTTP and HTTPS health probes used to check availability
+            of virtual machines in the backend address pool
+          - Two inbound NAT rules which contain rules that map a public port on the load
+            balancer to a port for a specific virtual machine in the backend address pool
+          - this provides direct VM connectivity for SSH to port 22 and TELNET to port 23
+          Create two network interfaces in the frontend subnet ...
+          - And associate network interfaces to backend pools and NAT rules
+          Create two virtual machines in the frontend subnet ...
+          - And assign network interfaces
+          Update an existing load balancer, configure TCP idle timeout
+          Create another load balancer
+          Remove an existing load balancer
 
 
-## Demo
+## Running this Sample ##
 
-A demo app is included to show how to use the project.
+To run this sample:
 
-To run the demo, follow these steps:
+Set the environment variable `AZURE_AUTH_LOCATION` with the full path for an auth file. See [how to create an auth file](https://github.com/Azure/azure-sdk-for-net/blob/Fluent/AUTH.md).
 
-(Add steps to start up the demo)
+    git clone https://github.com/Azure-Samples/network-dotnet-create-simple-internet-facing-load-balancer.git
 
-1.
-2.
-3.
+    cd network-dotnet-create-simple-internet-facing-load-balancer
 
-## Resources
+    dotnet restore
 
-(Any additional resources or related projects)
+    dotnet run
 
-- Link to supporting information
-- Link to similar sample
-- ...
+## More information ##
+
+[Azure Management Libraries for C#](https://github.com/Azure/azure-sdk-for-net/tree/Fluent)
+[Azure .Net Developer Center](https://azure.microsoft.com/en-us/develop/net/)
+If you don't have a Microsoft Azure subscription you can get a FREE trial account [here](http://go.microsoft.com/fwlink/?LinkId=330212)
+
+---
+
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
