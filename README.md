@@ -1,10 +1,10 @@
 ---
-services: Network
-platforms: .Net
+services: virtual-network
+platforms: dotnet
 author: martinsawicki
 ---
 
-# Getting Started with Network - Manage Internet Facing Load Balancer - in .Net #
+# Create a simple Internet Facing load balancer using C# #
 
           Azure Network sample for managing Internet facing load balancers -
          
@@ -47,7 +47,7 @@ author: martinsawicki
 
 To run this sample:
 
-Set the environment variable `AZURE_AUTH_LOCATION` with the full path for an auth file. See [how to create an auth file](https://github.com/Azure/azure-sdk-for-net/blob/Fluent/AUTH.md).
+Set the environment variable `AZURE_AUTH_LOCATION` with the full path for an auth file. See [how to create an auth file](https://github.com/Azure/azure-libraries-for-java/blob/master/AUTH.md).
 
     git clone https://github.com/Azure-Samples/network-dotnet-create-simple-internet-facing-load-balancer.git
 
