@@ -1,7 +1,7 @@
 ---
 services: virtual-network
 platforms: dotnet
-author: martinsawicki
+author: yaohaizh
 ---
 
 # Create a simple Internet Facing load balancer using C# #
@@ -11,7 +11,7 @@ author: martinsawicki
           High-level ...
          
           - Create an Internet facing load balancer that receives network traffic on
-            port 80 & 443 and sends load-balanced traffic to two virtual machines
+            port 80 and 443 and sends load-balanced traffic to two virtual machines
          
           - Create NAT rules for SSH and TELNET access to virtual
             machines behind the load balancer
@@ -47,7 +47,7 @@ author: martinsawicki
 
 To run this sample:
 
-Set the environment variable `AZURE_AUTH_LOCATION` with the full path for an auth file. See [how to create an auth file](https://github.com/Azure/azure-libraries-for-java/blob/master/AUTH.md).
+Set the environment variable `AZURE_AUTH_LOCATION` with the full path for an auth file. See [how to create an auth file](https://github.com/Azure/azure-libraries-for-net/blob/master/AUTH.md).
 
     git clone https://github.com/Azure-Samples/network-dotnet-create-simple-internet-facing-load-balancer.git
 
