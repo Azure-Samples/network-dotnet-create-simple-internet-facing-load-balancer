@@ -52,10 +52,10 @@ Set the environment variable `AZURE_AUTH_LOCATION` with the full path for an aut
     git clone https://github.com/Azure-Samples/network-dotnet-create-simple-internet-facing-load-balancer.git
 
     cd network-dotnet-create-simple-internet-facing-load-balancer
-
-    dotnet restore
-
-    dotnet run
+  
+    dotnet build
+    
+    bin\Debug\net452\ManageInternetFacingLoadBalancer.exe
 
 ## More information ##
 
