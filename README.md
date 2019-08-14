@@ -1,7 +1,9 @@
 ---
 page_type: sample
-languages: java
-products: azure
+languages:
+- java
+products:
+- azure
 services: virtual-network
 platforms: dotnet
 author: yaohaizh
@@ -55,9 +57,9 @@ Set the environment variable `AZURE_AUTH_LOCATION` with the full path for an aut
     git clone https://github.com/Azure-Samples/network-dotnet-create-simple-internet-facing-load-balancer.git
 
     cd network-dotnet-create-simple-internet-facing-load-balancer
-  
+
     dotnet build
-    
+
     bin\Debug\net452\ManageInternetFacingLoadBalancer.exe
 
 ## More information ##
