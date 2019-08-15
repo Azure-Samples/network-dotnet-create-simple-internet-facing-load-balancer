@@ -4,48 +4,39 @@ languages:
 - csharp
 products:
 - azure
-services: virtual-network
-platforms: dotnet
-author: yaohaizh
+extensions:
+- services: virtual-network
+- platforms: dotnet
 ---
 
 # Create a simple Internet Facing load balancer using C# #
 
-          Azure Network sample for managing Internet facing load balancers -
-         
-          High-level ...
-         
-          - Create an Internet facing load balancer that receives network traffic on
-            port 80 and 443 and sends load-balanced traffic to two virtual machines
-         
-          - Create NAT rules for SSH and TELNET access to virtual
-            machines behind the load balancer
-         
-          - Create health probes
-         
-          Details ...
-         
-          Create an Internet facing load balancer with ...
-          - A frontend public IP address
-          - Two backend address pools which contain network interfaces for the virtual
-            machines to receive HTTP and HTTPS network traffic from the load balancer
-          - Two load balancing rules for HTTP and HTTPS to map public ports on the load
-            balancer to ports in the backend address pool
-          - Two probes which contain HTTP and HTTPS health probes used to check availability
-            of virtual machines in the backend address pool
-          - Two inbound NAT rules which contain rules that map a public port on the load
-            balancer to a port for a specific virtual machine in the backend address pool
-          - this provides direct VM connectivity for SSH to port 22 and TELNET to port 23
-         
-          Create two network interfaces in the frontend subnet ...
-          - And associate network interfaces to backend pools and NAT rules
-         
-          Create two virtual machines in the frontend subnet ...
-          - And assign network interfaces
-         
-          Update an existing load balancer, configure TCP idle timeout
-          Create another load balancer
-          Remove an existing load balancer
+ Azure Network sample for managing Internet facing load balancers -
+ High-level ...
+ - Create an Internet facing load balancer that receives network traffic on
+   port 80 and 443 and sends load-balanced traffic to two virtual machines
+ - Create NAT rules for SSH and TELNET access to virtual
+   machines behind the load balancer
+ - Create health probes
+ Details ...
+ Create an Internet facing load balancer with ...
+ - A frontend public IP address
+ - Two backend address pools which contain network interfaces for the virtual
+   machines to receive HTTP and HTTPS network traffic from the load balancer
+ - Two load balancing rules for HTTP and HTTPS to map public ports on the load
+   balancer to ports in the backend address pool
+ - Two probes which contain HTTP and HTTPS health probes used to check availability
+   of virtual machines in the backend address pool
+ - Two inbound NAT rules which contain rules that map a public port on the load
+   balancer to a port for a specific virtual machine in the backend address pool
+ - this provides direct VM connectivity for SSH to port 22 and TELNET to port 23
+ Create two network interfaces in the frontend subnet ...
+ - And associate network interfaces to backend pools and NAT rules
+ Create two virtual machines in the frontend subnet ...
+ - And assign network interfaces
+ Update an existing load balancer, configure TCP idle timeout
+ Create another load balancer
+ Remove an existing load balancer
 
 
 ## Running this Sample ##
