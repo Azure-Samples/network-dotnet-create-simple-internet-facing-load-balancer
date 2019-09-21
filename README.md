@@ -7,6 +7,7 @@ products:
 extensions:
 - services: virtual-network
 - platforms: dotnet
+description: "Azure Network sample for managing Internet facing load balancers."
 ---
 
 # Create a simple Internet Facing load balancer using C# #
