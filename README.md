@@ -10,7 +10,7 @@ extensions:
 description: "Azure Network sample for managing Internet facing load balancers."
 ---
 
-# Create a simple Internet Facing load balancer using C# #
+# Create a simple Internet Facing load balancer using C#
 
  Azure Network sample for managing Internet facing load balancers -
  High-level ...
@@ -40,7 +40,7 @@ description: "Azure Network sample for managing Internet facing load balancers."
  Remove an existing load balancer
 
 
-## Running this Sample ##
+## Running this Sample
 
 To run this sample:
 
@@ -54,7 +54,7 @@ Set the environment variable `AZURE_AUTH_LOCATION` with the full path for an aut
 
     bin\Debug\net452\ManageInternetFacingLoadBalancer.exe
 
-## More information ##
+## More information
 
 [Azure Management Libraries for C#](https://github.com/Azure/azure-sdk-for-net/tree/Fluent)
 [Azure .Net Developer Center](https://azure.microsoft.com/en-us/develop/net/)
