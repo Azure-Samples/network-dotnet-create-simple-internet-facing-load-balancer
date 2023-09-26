@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See License.txt in the project root for license information.
 
-using Microsoft.Azure.Management.Compute.Fluent;
-using Microsoft.Azure.Management.Compute.Fluent.Models;
-using Microsoft.Azure.Management.Fluent;
-using Microsoft.Azure.Management.Network.Fluent;
-using Microsoft.Azure.Management.Network.Fluent.Models;
-using Microsoft.Azure.Management.ResourceManager.Fluent;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Core;
-using Microsoft.Azure.Management.ResourceManager.Fluent.Core.ResourceActions;
-using Microsoft.Azure.Management.Samples.Common;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Azure;
+using Azure.Core;
+using Azure.Identity;
+using Azure.ResourceManager.Resources.Models;
+using Azure.ResourceManager.Samples.Common;
+using Azure.ResourceManager.Resources;
+using Azure.ResourceManager;
+using Azure.ResourceManager.Network;
+using Azure.ResourceManager.Network.Models;
+using Azure.ResourceManager.Storage.Models;
+using Azure.ResourceManager.Storage;
+using Microsoft.Identity.Client.Extensions.Msal;
+using Azure.ResourceManager.Compute.Models;
+using Azure.ResourceManager.Compute;
 
 namespace ManageInternetFacingLoadBalancer
 {
@@ -27,8 +29,7 @@ namespace ManageInternetFacingLoadBalancer
         private static readonly string NatRule5001to23forVM1 = "nat5001to23forVM1";
         private static readonly string NatRule5002to22forVM2 = "nat5002to22forVM2";
         private static readonly string NatRule5003to23forVM2 = "nat5003to23forVM2";
-        private static readonly string UserName = Utilities.CreateUsername();
-        private static readonly string SshKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCfSPC2K7LZcFKEO+/t3dzmQYtrJFZNxOsbVgOVKietqHyvmYGHEC0J2wPdAqQ/63g/hhAEFRoyehM+rbeDri4txB3YFfnOK58jqdkyXzupWqXzOrlKY4Wz9SKjjN765+dqUITjKRIaAip1Ri137szRg71WnrmdP3SphTRlCx1Bk2nXqWPsclbRDCiZeF8QOTi4JqbmJyK5+0UqhqYRduun8ylAwKKQJ1NJt85sYIHn9f1Rfr6Tq2zS0wZ7DHbZL+zB5rSlAr8QyUdg/GQD+cmSs6LvPJKL78d6hMGk84ARtFo4A79ovwX/Fj01znDQkU6nJildfkaolH2rWFG/qttD azjava@javalib.Com";
+        private static ResourceIdentifier? _resourceGroupId = null;
 
         /**
          * Azure Network sample for managing Internet facing load balancers -
@@ -67,25 +68,35 @@ namespace ManageInternetFacingLoadBalancer
          * Create another load balancer
          * Remove an existing load balancer
          */
-        public static void RunSample(IAzure azure)
+        public static async Task RunSample(ArmClient client)
         {
-            string rgName = SdkContext.RandomResourceName("rgNEML", 15);
-            string vnetName = SdkContext.RandomResourceName("vnet", 24);
-            string loadBalancerName1 = SdkContext.RandomResourceName("intlb1" + "-", 18);
-            string loadBalancerName2 = SdkContext.RandomResourceName("intlb2" + "-", 18);
+            string rgName = Utilities.CreateRandomName("NetworkSampleRG");
+            string vnetName = Utilities.CreateRandomName("vnet");
+            string loadBalancerName1 = Utilities.CreateRandomName("intlb1");
+            string loadBalancerName2 = Utilities.CreateRandomName("intlb2");
             string publicIpName1 = "pip1-" + loadBalancerName1;
             string publicIpName2 = "pip2-" + loadBalancerName1;
             string frontendName = loadBalancerName1 + "-FE1";
             string backendPoolName1 = loadBalancerName1 + "-BAP1";
             string backendPoolName2 = loadBalancerName1 + "-BAP2";
-            string networkInterfaceName1 = SdkContext.RandomResourceName("nic1", 24);
-            string networkInterfaceName2 = SdkContext.RandomResourceName("nic2", 24);
-            string availSetName = SdkContext.RandomResourceName("av", 24);
-            string vmName1 = SdkContext.RandomResourceName("lVM1", 24);
-            string vmName2 = SdkContext.RandomResourceName("lVM2", 24);
+            string networkInterfaceName1 = Utilities.CreateRandomName("nic1");
+            string networkInterfaceName2 = Utilities.CreateRandomName("nic2");
+            string availSetName = Utilities.CreateRandomName("av");
+            string vmName1 = Utilities.CreateRandomName("lVM1");
+            string vmName2 = Utilities.CreateRandomName("lVM2");
 
             try
             {
+                // Get default subscription
+                SubscriptionResource subscription = await client.GetDefaultSubscriptionAsync();
+
+                // Create a resource group in the EastUS region
+                Utilities.Log($"Creating resource group...");
+                ArmOperation<ResourceGroupResource> rgLro = await subscription.GetResourceGroups().CreateOrUpdateAsync(WaitUntil.Completed, rgName, new ResourceGroupData(AzureLocation.WestUS));
+                ResourceGroupResource resourceGroup = rgLro.Value;
+                _resourceGroupId = resourceGroup.Id;
+                Utilities.Log("Created a resource group with name: " + resourceGroup.Data.Name);
+
                 //=============================================================
                 // Create a virtual network with a frontend and a backend subnets
                 Utilities.Log("Creating virtual network with a frontend and a backend subnets...");
@@ -467,9 +478,12 @@ namespace ManageInternetFacingLoadBalancer
             {
                 try
                 {
-                    Utilities.Log("Deleting Resource Group: " + rgName);
-                    azure.ResourceGroups.DeleteByName(rgName);
-                    Utilities.Log("Deleted Resource Group: " + rgName);
+                    if (_resourceGroupId is not null)
+                    {
+                        Utilities.Log($"Deleting Resource Group...");
+                        await client.GetResourceGroupResource(_resourceGroupId).DeleteAsync(WaitUntil.Completed);
+                        Utilities.Log($"Deleted Resource Group: {_resourceGroupId.Name}");
+                    }
                 }
                 catch (NullReferenceException)
                 {
@@ -482,24 +496,21 @@ namespace ManageInternetFacingLoadBalancer
             }
         }
 
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
+            var clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
+            var clientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET");
+            var tenantId = Environment.GetEnvironmentVariable("TENANT_ID");
+            var subscription = Environment.GetEnvironmentVariable("SUBSCRIPTION_ID");
+            ClientSecretCredential credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+            ArmClient client = new ArmClient(credential, subscription);
+
+            await RunSample(client);
+
             try
             {
                 //=================================================================
                 // Authenticate
-                var credentials = SdkContext.AzureCredentialsFactory.FromFile(Environment.GetEnvironmentVariable("AZURE_AUTH_LOCATION"));
-
-                var azure = Azure
-                    .Configure()
-                    .WithLogLevel(HttpLoggingDelegatingHandler.Level.Basic)
-                    .Authenticate(credentials)
-                    .WithDefaultSubscription();
-
-                // Print selected subscription
-                Utilities.Log("Selected subscription: " + azure.SubscriptionId);
-
-                RunSample(azure);
             }
             catch (Exception ex)
             {
