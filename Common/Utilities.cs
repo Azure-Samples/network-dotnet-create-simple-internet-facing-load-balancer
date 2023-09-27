@@ -22,6 +22,8 @@ namespace Azure.ResourceManager.Samples.Common
         public static string ProjectPath { get; set; }
         private static Random _random => new Random();
 
+        private static readonly string SshKey = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCfSPC2K7LZcFKEO+/t3dzmQYtrJFZNxOsbVgOVKietqHyvmYGHEC0J2wPdAqQ/63g/hhAEFRoyehM+rbeDri4txB3YFfnOK58jqdkyXzupWqXzOrlKY4Wz9SKjjN765+dqUITjKRIaAip1Ri137szRg71WnrmdP3SphTRlCx1Bk2nXqWPsclbRDCiZeF8QOTi4JqbmJyK5+0UqhqYRduun8ylAwKKQJ1NJt85sYIHn9f1Rfr6Tq2zS0wZ7DHbZL+zB5rSlAr8QyUdg/GQD+cmSs6LvPJKL78d6hMGk84ARtFo4A79ovwX/Fj01znDQkU6nJildfkaolH2rWFG/qttD azjava@javalib.Com";
+
         static Utilities()
         {
             LoggerMethod = Console.WriteLine;
@@ -81,30 +83,6 @@ namespace Azure.ResourceManager.Samples.Common
             return publicIPLro.Value;
         }
 
-        public static async Task<NetworkInterfaceResource> CreateNetworkInterface(ResourceGroupResource resourceGroup, VirtualNetworkResource vnet, string nicName = null)
-        {
-            nicName = nicName is null ? CreateRandomName("nic") : nicName;
-
-            var nicInput = new NetworkInterfaceData()
-            {
-                Location = resourceGroup.Data.Location,
-                IPConfigurations =
-                    {
-                        new NetworkInterfaceIPConfigurationData()
-                        {
-                            Name = "default-config",
-                            PrivateIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
-                            Subnet = new SubnetData()
-                            {
-                                Id = vnet.Data.Subnets.First().Id
-                            }
-                        }
-                    }
-            };
-            var networkInterfaceLro = await resourceGroup.GetNetworkInterfaces().CreateOrUpdateAsync(WaitUntil.Completed, nicName, nicInput);
-            return networkInterfaceLro.Value;
-        }
-
         public static VirtualMachineData GetDefaultVMInputData(ResourceGroupResource resourceGroup, string vmName) =>
             new VirtualMachineData(resourceGroup.Data.Location)
             {
@@ -113,27 +91,37 @@ namespace Azure.ResourceManager.Samples.Common
                 {
                     ImageReference = new ImageReference()
                     {
-                        Publisher = "MicrosoftWindowsDesktop",
-                        Offer = "Windows-10",
-                        Sku = "win10-21h2-ent",
+                        Publisher = "Canonical",
+                        Offer = "UbuntuServer",
+                        Sku = "16.04-LTS",
                         Version = "latest",
                     },
                     OSDisk = new VirtualMachineOSDisk(DiskCreateOptionType.FromImage)
                     {
-                        OSType = SupportedOperatingSystemType.Windows,
-                        Name = CreateRandomName("myVMOSdisk"),
-                        Caching = CachingType.ReadOnly,
+                        OSType = SupportedOperatingSystemType.Linux,
+                        Caching = CachingType.ReadWrite,
                         ManagedDisk = new VirtualMachineManagedDisk()
                         {
-                            StorageAccountType = StorageAccountType.StandardLrs,
-                        },
+                            StorageAccountType = StorageAccountType.StandardLrs
+                        }
                     },
                 },
                 OSProfile = new VirtualMachineOSProfile()
                 {
                     AdminUsername = CreateUsername(),
-                    AdminPassword = CreatePassword(),
                     ComputerName = vmName,
+                    LinuxConfiguration = new LinuxConfiguration()
+                    {
+                        DisablePasswordAuthentication = true,
+                        SshPublicKeys = 
+                        {
+                            new SshPublicKeyConfiguration()
+                            {
+                                Path = $"/home/{CreateUsername()}/.ssh/authorized_keys",
+                                KeyData = SshKey,
+                            }
+                        }
+                    }
                 },
                 NetworkProfile = new VirtualMachineNetworkProfile() { }
             };
