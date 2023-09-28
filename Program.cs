@@ -75,31 +75,20 @@ namespace ManageInternetFacingLoadBalancer
         {
             string rgName = Utilities.CreateRandomName("NetworkSampleRG");
             string vnetName = Utilities.CreateRandomName("vnet");
-            string loadBalancerName1 = Utilities.CreateRandomName("balancer1");
-            string loadBalancerName2 = Utilities.CreateRandomName("balancer2");
+            string loadBalancerName1 = Utilities.CreateRandomName("balancer1-");
+            string loadBalancerName2 = Utilities.CreateRandomName("balancer2-");
             string publicIpName1 = "pip1-" + loadBalancerName1;
             string publicIpName2 = "pip2-" + loadBalancerName1;
             string frontendName = loadBalancerName1 + "-FE1";
             string backendPoolName1 = loadBalancerName1 + "-BAP1";
             string backendPoolName2 = loadBalancerName1 + "-BAP2";
-            string networkInterfaceName1 = Utilities.CreateRandomName("nic1");
-            string networkInterfaceName2 = Utilities.CreateRandomName("nic2");
+            string networkInterfaceName1 = Utilities.CreateRandomName("nic1-");
+            string networkInterfaceName2 = Utilities.CreateRandomName("nic2-");
             string availSetName = Utilities.CreateRandomName("av");
-            string vmName1 = Utilities.CreateRandomName("lVM1");
-            string vmName2 = Utilities.CreateRandomName("lVM2");
+            string vmName1 = Utilities.CreateRandomName("lVM1-");
+            string vmName2 = Utilities.CreateRandomName("lVM2-");
 
-
-            rgName = "NetworkSampleRG1000";
             try
-            {
-                SubscriptionResource subscription = await client.GetDefaultSubscriptionAsync();
-
-                // Create a resource group in the EastUS region
-                Utilities.Log($"deleting resource group...");
-                var tempRG = await subscription.GetResourceGroups().GetAsync(rgName);
-                await tempRG.Value?.DeleteAsync(WaitUntil.Completed);
-            }
-            catch (Exception ex) { }
             {
                 // Get default subscription
                 SubscriptionResource subscription = await client.GetDefaultSubscriptionAsync();
@@ -110,8 +99,6 @@ namespace ManageInternetFacingLoadBalancer
                 ResourceGroupResource resourceGroup = rgLro.Value;
                 _resourceGroupId = resourceGroup.Id;
                 Utilities.Log("Created a resource group with name: " + resourceGroup.Data.Name);
-
-
 
                 //=============================================================
                 // Create a virtual network with a frontend and a backend subnets
@@ -137,6 +124,11 @@ namespace ManageInternetFacingLoadBalancer
                 PublicIPAddressData publicIPInput1 = new PublicIPAddressData()
                 {
                     Location = resourceGroup.Data.Location,
+                    Sku = new PublicIPAddressSku()
+                    {
+                        Name = PublicIPAddressSkuName.Standard,
+                        Tier = PublicIPAddressSkuTier.Regional
+                    },
                     PublicIPAllocationMethod = NetworkIPAllocationMethod.Static,
                     DnsSettings = new PublicIPAddressDnsSettings { DomainNameLabel = publicIpName1 },
                 };
@@ -173,7 +165,8 @@ namespace ManageInternetFacingLoadBalancer
 
 
                 var frontendIPConfigurationId = new ResourceIdentifier($"{resourceGroup.Id}/providers/Microsoft.Network/loadBalancers/{loadBalancerName1}/frontendIPConfigurations/{frontendName}");
-                var backendAddressPoolId = new ResourceIdentifier($"{resourceGroup.Id}/providers/Microsoft.Network/loadBalancers/{loadBalancerName1}/backendAddressPools/{backendPoolName1}");
+                var backendAddressPoolId1 = new ResourceIdentifier($"{resourceGroup.Id}/providers/Microsoft.Network/loadBalancers/{loadBalancerName1}/backendAddressPools/{backendPoolName1}");
+                var backendAddressPoolId2 = new ResourceIdentifier($"{resourceGroup.Id}/providers/Microsoft.Network/loadBalancers/{loadBalancerName1}/backendAddressPools/{backendPoolName2}");
                 LoadBalancerData loadBalancerInput = new LoadBalancerData()
                 {
                     Location = resourceGroup.Data.Location,
@@ -188,16 +181,13 @@ namespace ManageInternetFacingLoadBalancer
                         new FrontendIPConfigurationData()
                         {
                             Name = frontendName,
-                            PrivateIPAllocationMethod = NetworkIPAllocationMethod.Static,
-                            Subnet = vnet.Data.Subnets.First(item=> item.Name == "Front-end"),
+                            PrivateIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
                             PublicIPAddress = new PublicIPAddressData()
                             {
                                 Id = publicIP1.Id,
-                                IPAddress  = publicIP1.Data.IPAddress,
                                 LinkedPublicIPAddress = new PublicIPAddressData()
                                 {
                                     Id = publicIP1.Id,
-                                    IPAddress =  publicIP1.Data.IPAddress,
                                 }
                             }
                         }
@@ -207,6 +197,10 @@ namespace ManageInternetFacingLoadBalancer
                         new BackendAddressPoolData()
                         {
                             Name = backendPoolName1
+                        },
+                        new BackendAddressPoolData()
+                        {
+                            Name = backendPoolName2
                         }
                     },
                     // Add two rules that uses above backend and probe
@@ -216,7 +210,7 @@ namespace ManageInternetFacingLoadBalancer
                         {
                             Name = HttpLoadBalancingRule,
                             FrontendIPConfigurationId = frontendIPConfigurationId,
-                            BackendAddressPoolId = backendAddressPoolId,
+                            BackendAddressPoolId = backendAddressPoolId1,
                             Protocol = LoadBalancingTransportProtocol.Tcp,
                             FrontendPort = 80,
                             BackendPort = 80,
@@ -228,7 +222,7 @@ namespace ManageInternetFacingLoadBalancer
                         {
                             Name = HttpsLoadBalancingRule,
                             FrontendIPConfigurationId = frontendIPConfigurationId,
-                            BackendAddressPoolId = backendAddressPoolId,
+                            BackendAddressPoolId = backendAddressPoolId2,
                             Protocol = LoadBalancingTransportProtocol.Tcp,
                             FrontendPort = 443,
                             BackendPort = 443,
@@ -330,18 +324,22 @@ namespace ManageInternetFacingLoadBalancer
                             {
                                 Id = vnet.Data.Subnets.First(item=>item.Name=="Front-end").Id
                             },
-                                            //        .WithExistingLoadBalancerBackend(loadBalancer1, backendPoolName1)
-                //        .WithExistingLoadBalancerBackend(loadBalancer1, backendPoolName2)
-                //        .WithExistingLoadBalancerInboundNatRule(loadBalancer1, NatRule5000to22forVM1)
-                //.WithExistingLoadBalancerInboundNatRule(loadBalancer1, NatRule5001to23forVM1);
+                            LoadBalancerBackendAddressPools =
+                            {
+                                new BackendAddressPoolData(){ Id = backendAddressPoolId1 },
+                                new BackendAddressPoolData(){ Id = backendAddressPoolId2 },
+                            },
+                            LoadBalancerInboundNatRules =
+                            {
+                                new InboundNatRuleData(){ Id = loadBalancer1.Data.InboundNatRules.First(item => item.Name == NatRule5000to22forVM1).Id },
+                                new InboundNatRuleData(){ Id = loadBalancer1.Data.InboundNatRules.First(item => item.Name == NatRule5001to23forVM1).Id },
+                            }
                         }
                     }
                 };
                 var networkInterfaceLro1 = await resourceGroup.GetNetworkInterfaces().CreateOrUpdateAsync(WaitUntil.Completed, networkInterfaceName1, nicInput1);
                 NetworkInterfaceResource networkInterface1 = networkInterfaceLro1.Value;
                 Utilities.Log($"Created network interface: {networkInterface1.Data.Name}");
-
-
 
                 var nicInput2 = new NetworkInterfaceData()
                 {
@@ -356,17 +354,16 @@ namespace ManageInternetFacingLoadBalancer
                             {
                                 Id = vnet.Data.Subnets.First(item=>item.Name=="Front-end").Id
                             },
-                            //LoadBalancerInboundNatRules = 
-                            //{
-                            //    new InboundNatRuleData()
-                            //    {
-                                    
-                            //    }
-                            //}
-                            //        .WithExistingLoadBalancerBackend(loadBalancer1, backendPoolName1)
-                            //        .WithExistingLoadBalancerBackend(loadBalancer1, backendPoolName2)
-                            //        .WithExistingLoadBalancerInboundNatRule(loadBalancer1, NatRule5002to22forVM2)
-                            //        .WithExistingLoadBalancerInboundNatRule(loadBalancer1, NatRule5003to23forVM2);
+                            LoadBalancerBackendAddressPools =
+                            {
+                                new BackendAddressPoolData(){ Id = backendAddressPoolId1 },
+                                new BackendAddressPoolData(){ Id = backendAddressPoolId2 },
+                            },
+                            LoadBalancerInboundNatRules =
+                            {
+                                new InboundNatRuleData(){ Id = loadBalancer1.Data.InboundNatRules.First(item => item.Name == NatRule5002to22forVM2).Id },
+                                new InboundNatRuleData(){ Id = loadBalancer1.Data.InboundNatRules.First(item => item.Name == NatRule5003to23forVM2).Id },
+                            }
                         }
                     }
                 };
@@ -398,7 +395,6 @@ namespace ManageInternetFacingLoadBalancer
                 Utilities.Log("Creating a new virtual machine...");
                 VirtualMachineData vmInput1 = Utilities.GetDefaultVMInputData(resourceGroup, vmName1);
                 vmInput1.NetworkProfile.NetworkInterfaces.Add(new VirtualMachineNetworkInterfaceReference() { Id = networkInterface1.Id, Primary = true });
-                //vmInput1.AvailabilitySetId  = availabilitySet.Id;
                 var vmLro1 = await resourceGroup.GetVirtualMachines().CreateOrUpdateAsync(WaitUntil.Completed, vmName1, vmInput1);
                 VirtualMachineResource vm1 = vmLro1.Value;
                 Utilities.Log($"Created virtual machine: {vm1.Data.Name}");
@@ -407,7 +403,6 @@ namespace ManageInternetFacingLoadBalancer
                 Utilities.Log("Creating a new virtual machine...");
                 VirtualMachineData vmInput2 = Utilities.GetDefaultVMInputData(resourceGroup, vmName2);
                 vmInput2.NetworkProfile.NetworkInterfaces.Add(new VirtualMachineNetworkInterfaceReference() { Id = networkInterface2.Id, Primary = true });
-                //vmInput2.AvailabilitySetId = availabilitySet.Id;
                 var vmLro2 = await resourceGroup.GetVirtualMachines().CreateOrUpdateAsync(WaitUntil.Completed, vmName2, vmInput2);
                 VirtualMachineResource vm2 = vmLro2.Value;
                 Utilities.Log($"Created virtual machine: {vm2.Data.Name}");
@@ -415,6 +410,9 @@ namespace ManageInternetFacingLoadBalancer
                 //=============================================================
                 // Update a load balancer
                 //  configure TCP idle timeout to 15 minutes
+
+                var vm = await resourceGroup.GetVirtualMachines().GetAsync(vmName1);
+                var nic = await resourceGroup.GetNetworkInterfaces().GetAsync(networkInterfaceName1);
 
                 Utilities.Log("Updating the load balancer ...");
 
@@ -433,7 +431,12 @@ namespace ManageInternetFacingLoadBalancer
                 PublicIPAddressData publicIPInput2 = new PublicIPAddressData()
                 {
                     Location = resourceGroup.Data.Location,
-                    PublicIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
+                    Sku = new PublicIPAddressSku()
+                    {
+                        Name = PublicIPAddressSkuName.Standard,
+                        Tier = PublicIPAddressSkuTier.Regional
+                    },
+                    PublicIPAllocationMethod = NetworkIPAllocationMethod.Static,
                     DnsSettings = new PublicIPAddressDnsSettings { DomainNameLabel = publicIpName2 }
                 };
                 _ = await resourceGroup.GetPublicIPAddresses().CreateOrUpdateAsync(WaitUntil.Completed, publicIpName2, publicIPInput2);
@@ -468,8 +471,8 @@ namespace ManageInternetFacingLoadBalancer
                         + "  - this provides direct VM connectivity for SSH to port 22 and TELNET to port 23");
 
                 frontendIPConfigurationId = new ResourceIdentifier($"{resourceGroup.Id}/providers/Microsoft.Network/loadBalancers/{loadBalancerName2}/frontendIPConfigurations/{frontendName}");
-                var backendAddressPoolId1 = new ResourceIdentifier($"{resourceGroup.Id}/providers/Microsoft.Network/loadBalancers/{loadBalancerName2}/backendAddressPools/{backendPoolName1}");
-                var backendAddressPoolId2 = new ResourceIdentifier($"{resourceGroup.Id}/providers/Microsoft.Network/loadBalancers/{loadBalancerName2}/backendAddressPools/{backendPoolName2}");
+                backendAddressPoolId1 = new ResourceIdentifier($"{resourceGroup.Id}/providers/Microsoft.Network/loadBalancers/{loadBalancerName2}/backendAddressPools/{backendPoolName1}");
+                backendAddressPoolId2 = new ResourceIdentifier($"{resourceGroup.Id}/providers/Microsoft.Network/loadBalancers/{loadBalancerName2}/backendAddressPools/{backendPoolName2}");
                 loadBalancerInput = new LoadBalancerData()
                 {
                     Location = resourceGroup.Data.Location,
@@ -485,11 +488,14 @@ namespace ManageInternetFacingLoadBalancer
                         new FrontendIPConfigurationData()
                         {
                             Name = frontendName,
-                            PrivateIPAllocationMethod = NetworkIPAllocationMethod.Static,
-                            Subnet = vnet.Data.Subnets.First(item=> item.Name == "Front-end"),
+                            PrivateIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
                             PublicIPAddress = new PublicIPAddressData()
                             {
-                                IPAddress = publicIP2.Data.IPAddress
+                                Id = publicIP2.Id,
+                                LinkedPublicIPAddress = new PublicIPAddressData()
+                                {
+                                    Id = publicIP2.Id,
+                                }
                             }
                         }
                     },
@@ -498,6 +504,10 @@ namespace ManageInternetFacingLoadBalancer
                         new BackendAddressPoolData()
                         {
                             Name = backendPoolName1
+                        },
+                        new BackendAddressPoolData()
+                        {
+                            Name = backendPoolName2
                         }
                     },
                     // Add two rules that uses above backend and probe
@@ -620,6 +630,7 @@ namespace ManageInternetFacingLoadBalancer
                 await loadBalancer2.DeleteAsync(WaitUntil.Completed);
                 Utilities.Log("Deleted load balancer" + loadBalancerName2);
             }
+            finally
             {
                 try
                 {
@@ -643,19 +654,18 @@ namespace ManageInternetFacingLoadBalancer
 
         public static async Task Main(string[] args)
         {
-            var clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
-            var clientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET");
-            var tenantId = Environment.GetEnvironmentVariable("TENANT_ID");
-            var subscription = Environment.GetEnvironmentVariable("SUBSCRIPTION_ID");
-            ClientSecretCredential credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
-            ArmClient client = new ArmClient(credential, subscription);
-
-            await RunSample(client);
-
             try
             {
                 //=================================================================
                 // Authenticate
+                var clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
+                var clientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET");
+                var tenantId = Environment.GetEnvironmentVariable("TENANT_ID");
+                var subscription = Environment.GetEnvironmentVariable("SUBSCRIPTION_ID");
+                ClientSecretCredential credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+                ArmClient client = new ArmClient(credential, subscription);
+
+                await RunSample(client);
             }
             catch (Exception ex)
             {

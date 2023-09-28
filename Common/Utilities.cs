@@ -71,18 +71,6 @@ namespace Azure.ResourceManager.Samples.Common
             return list;
         }
 
-        public static async Task<PublicIPAddressResource> CreatePublicIP(ResourceGroupResource resourceGroup, string publicIPName = null)
-        {
-            publicIPName = publicIPName is null ? CreateRandomName("pip") : publicIPName;
-            var publicIPInput = new PublicIPAddressData()
-            {
-                Location = resourceGroup.Data.Location,
-                PublicIPAllocationMethod = NetworkIPAllocationMethod.Dynamic,
-            };
-            var publicIPLro = await resourceGroup.GetPublicIPAddresses().CreateOrUpdateAsync(WaitUntil.Completed, publicIPName, publicIPInput);
-            return publicIPLro.Value;
-        }
-
         public static VirtualMachineData GetDefaultVMInputData(ResourceGroupResource resourceGroup, string vmName) =>
             new VirtualMachineData(resourceGroup.Data.Location)
             {
